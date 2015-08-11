@@ -49,10 +49,10 @@ Vagrant.configure(2) do |config|
       echo 'alias l="ls -lah"' >> /root/.bash_profile
     fi
 
-    mv '/vagrant/vault.hcl' '/etc/vault/vault.hcl'
-    mv '/vagrant/consul-bootstrap.json' '/etc/consul/bootstrap/config.json'
-    mv '/vagrant/consul-server.json' '/etc/consul/server/config.json'
-    mv '/vagrant/consul.service' '/etc/systemd/system/consul.service'
+    cp '/vagrant/vault.hcl' '/etc/vault/vault.hcl'
+    cp '/vagrant/consul-bootstrap.json' '/etc/consul/bootstrap/config.json'
+    cp '/vagrant/consul-server.json' '/etc/consul/server/config.json'
+    cp '/vagrant/consul.service' '/etc/systemd/system/consul.service'
   SHELL
 
   config.vm.define "vault-01", primary: true do |node|
