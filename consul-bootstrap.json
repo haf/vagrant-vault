@@ -1,5 +1,6 @@
 {
   "acl_datacenter": "dev1",
+  "bind_addr": "192.168.33.10",
   "bootstrap_expect": 3,
   "server": true,
   "datacenter": "dev1",

@@ -1,0 +1,8 @@
+[Unit]
+Description=Hashicorp Vault Server
+Wants=bus-org.freedesktop.NetworkManager.target
+After=bus-org.freedesktop.NetworkManager.target
+
+[Service]
+User=root
+ExecStart=/usr/local/bin/vault server -configr /etc/vault/vault.hcl
