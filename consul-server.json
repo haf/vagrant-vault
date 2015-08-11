@@ -1,0 +1,14 @@
+{
+  "acl_datacenter": "dev1",
+  "server": true,
+  "datacenter": "dev1",
+  "data_dir": "/var/lib/consul",
+  "disable_anonymous_signature": true,
+  "disable_remote_exec": true,
+  "encrypt": "Owpx3FUSQPGswEAeIhcrFQ==",
+  "log_level": "DEBUG",
+  "enable_syslog": true,
+  "start_join": ["192.168.33.10", "192.168.33.20", "192.168.33.30"],
+  "ui_dir": "/opt/consul-ui",
+  "services": []
+}

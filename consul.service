@@ -1,0 +1,8 @@
+[Unit]
+Description=Hashicorp Consul Server
+Wants=bus-org.freedesktop.NetworkManager.target
+After=bus-org.freedesktop.NetworkManager.target
+
+[Service]
+User=root
+ExecStart=/usr/local/bin/consul agent -config-dir /etc/consul/server
