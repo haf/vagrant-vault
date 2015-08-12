@@ -6,3 +6,5 @@ After=bus-org.freedesktop.NetworkManager.target
 [Service]
 User=root
 ExecStart=/usr/local/bin/consul agent -config-dir /etc/consul/server
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT

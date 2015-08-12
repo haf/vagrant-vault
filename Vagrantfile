@@ -17,7 +17,8 @@ Vagrant.configure(2) do |config|
     cd /root/
 
     yum update -y && yum upgrade -y
-    yum install -y curl unzip epel-release yum-utils nginx vim
+    yum install -y curl unzip epel-release yum-utils nginx vim ca-certificates jq
+
     mkdir -p /etc/vault /etc/consul/server /etc/consul/bootstrap /etc/consul-template
     mkdir -p /var/lib/consul
     mkdir -p /opt/consul-ui
@@ -47,6 +48,8 @@ Vagrant.configure(2) do |config|
     if [[ ! $(grep '/usr/local/bin' /root/.bash_profile) ]]; then
       echo 'export PATH=$PATH:/usr/local/bin' >> /root/.bash_profile
       echo 'export PATH=$PATH:/usr/local/bin' >> /vagrant/.bash_profile
+      echo 'export VAULT_ADDR="https://$(hostname):8200"' >> /vagrant/.bash_profile
+      echo 'export VAULT_ADDR="https://$(hostname):8200"' >> /root/.bash_profile
       echo 'alias l="ls -lah"' >> /root/.bash_profile
       echo 'alias l="ls -lah"' >> /vagrant/.bash_profile
     fi
@@ -56,7 +59,6 @@ Vagrant.configure(2) do |config|
     cp '/vagrant/consul-server.json' '/etc/consul/server/config.json'
     cp '/vagrant/consul.service' '/etc/systemd/system/consul.service'
     cp '/vagrant/vault.service' '/etc/systemd/system/vault.service'
-
   SHELL
 
   config.vm.define "vault-01", primary: true do |node|
@@ -65,6 +67,7 @@ Vagrant.configure(2) do |config|
     # kill this manually, after the other two have run, then start consul through systemd:
     node.vm.provision "shell", inline: <<-SHELL
       [[ -f /etc/consul/server/bind.json ]] || echo '{ "bind_addr": "192.168.33.10" }' >> /etc/consul/server/bind.json
+      openssl req -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/pki/tls/private/vault.key -out /etc/pki/tls/private/vault.crt -subj "/C=SE/ST=/L=Stockholm/O=VaultedCorp/OU=/CN=vault-01"
     SHELL
   end
 
@@ -73,9 +76,7 @@ Vagrant.configure(2) do |config|
     node.vm.network "private_network", ip: "192.168.33.20"
     node.vm.provision "shell", inline: <<-SHELL
       [[ -f /etc/consul/server/bind.json ]] || echo '{ "bind_addr": "192.168.33.20" }' >> /etc/consul/server/bind.json
-      systemctl daemon-reload
-      systemctl enable consul
-      systemctl start consul
+      openssl req -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/pki/tls/private/vault.key -out /etc/pki/tls/private/vault.crt -subj "/C=SE/ST=/L=Stockholm/O=VaultedCorp/OU=/CN=vault-02"
     SHELL
   end
 
@@ -86,17 +87,20 @@ Vagrant.configure(2) do |config|
     # consul agent -config-dir /etc/consul/server &
     node.vm.provision "shell", inline: <<-SHELL
       [[ -f /etc/consul/server/bind.json ]] || echo '{ "bind_addr": "192.168.33.30" }' >> /etc/consul/server/bind.json
-      systemctl daemon-reload
-      systemctl enable consul
-      systemctl start consul
+      openssl req -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/pki/tls/private/vault.key -out /etc/pki/tls/private/vault.crt -subj "/C=SE/ST=/L=Stockholm/O=VaultedCorp/OU=/CN=vault-03"
     SHELL
   end
 
   config.vm.provision "shell", inline: <<-SHELL
-    echo 'DONE!'
+    update-ca-trust enable
+    cp /etc/pki/tls/private/vault.crt /etc/pki/ca-trust/source/anchors/
+    update-ca-trust extract
+
     systemctl daemon-reload
     systemctl enable consul
-    systemctl start consul
+    systemctl enable vault
+    systemctl restart consul
+    systemctl restart vault
   SHELL
 
   # now you can test it!
@@ -110,7 +114,7 @@ Vagrant.configure(2) do |config|
   #     Locality Name (eg, city) [Default City]:Stockholm
   #     Organization Name (eg, company) [Default Company Ltd]:MyCompanyyy
   #     Organizational Unit Name (eg, section) []:Dev
-  #     Common Name (eg, your name or your server's hostname) []:127.0.0.1:8200
+  #     Common Name (eg, your name or your server's hostname) []:vault-01
   #   vault server -config=/etc/vault/vault.hcl
   #
   # on vault-01, other terminal:
@@ -118,6 +122,5 @@ Vagrant.configure(2) do |config|
   #   vault unseal -tls-skip-verify
   #   vault unseal -tls-skip-verify
   #   vault unseal -tls-skip-verify
-  #
-  #   # follow https://vaultproject.io/intro/getting-started/apis.html
+  #   vault token-create
 end

@@ -1,8 +1,17 @@
 [Unit]
-Description=Hashicorp Vault Server
-Wants=bus-org.freedesktop.NetworkManager.target
-After=bus-org.freedesktop.NetworkManager.target
+Description=HashiCorp Vault Server
+After=consul.service
+Requires=consul.service
 
 [Service]
-User=root
-ExecStart=/usr/local/bin/vault server -configr /etc/vault/vault.hcl
+Restart=on-failure
+RestartSec=20
+TimeoutStartSec=2
+
+ExecStart=/usr/local/bin/vault server -config=/etc/vault/vault.hcl
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
+
